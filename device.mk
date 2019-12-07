@@ -365,6 +365,8 @@ PRODUCT_PACKAGES += \
     init.target.rc \
     init.xiaomi.rc \
     ueventd.qcom.rc
+    ueventd.qcom.rc \
+    init.safailnet.rc
 
 PRODUCT_PACKAGES += \
     init.class_main.sh \
