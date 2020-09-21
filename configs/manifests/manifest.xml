@@ -538,6 +538,7 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <!-- WFD HAL Service -->
     <hal format="hidl">
         <name>com.qualcomm.qti.wifidisplayhal</name>
+        <name>vendor.qti.hardware.qteeconnector</name>
         <transport>hwbinder</transport>
         <version>1.0</version>
         <interface>

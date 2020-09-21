@@ -60,3 +60,7 @@ persist.audio.dirac.                    u:object_r:dirac_prop:s0
 persist.xiaomiparts.gpu_profile                  u:object_r:boosts_prop:s0
 persist.xiaomiparts.cpu_profile                  u:object_r:boosts_prop:s0
 
+persist.audio.dirac.                u:object_r:dirac_prop:s0
+
+# Power
+vendor.powerhal.                        u:object_r:vendor_power_prop:s0

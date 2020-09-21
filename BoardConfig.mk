@@ -145,7 +145,7 @@ BOARD_ROOT_EXTRA_SYMLINKS := \
     /vendor/firmware_mnt:/firmware \
     /vendor/bt_firmware:/bt_firmware \
     /mnt/vendor/persist:/persist
-	
+
 TARGET_COPY_OUT_VENDOR := vendor
 
 # Perf
@@ -154,7 +154,7 @@ HWUI_COMPILE_FOR_PERF := true
 # Power
 TARGET_USES_INTERACTION_BOOST := true
 
-# QCOM hardware
+# QCOM
 BOARD_USES_QCOM_HARDWARE := true
 
 # Recovery

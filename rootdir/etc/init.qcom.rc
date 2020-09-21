@@ -69,6 +69,12 @@ on post-fs
     chmod 0755 /sys/kernel/debug/tracing
     # Allow writing to the kernel trace log.
     chmod 0222 /sys/kernel/debug/tracing/trace_marker
+    write /sys/class/graphics/fb0/idle_time 100
+    chown 0660 /sys/class/leds/red/brightness
+    chown 0660 /sys/class/leds/red/blink
+    chown system system /sys/class/leds/red/brightness
+    chown system system /sys/class/leds/red/blink
+    chown system system /sys/class/leds/red/duty_pcts
 
 on early-boot
     # set RLIMIT_MEMLOCK to 64MB
@@ -323,6 +329,10 @@ on post-fs-data
     mkdir /data/vendor/time/ 0700 system system
 
     setprop vold.post_fs_data_done 1
+
+    # Create FM dir for patchdownloader
+    mkdir /data/vendor/fm 0770 system system
+    chmod 0770 /data/vendor/fm
 
     mkdir /data/vendor/secure_element 0777 system system
 
