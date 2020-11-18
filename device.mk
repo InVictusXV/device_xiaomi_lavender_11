@@ -131,6 +131,7 @@ PRODUCT_PACKAGES += \
     libdisplayconfig.qti \
     libdisplayconfig.qti.vendor \
     libqdMetaData \
+    libstagefright_enc_common \
     libqdMetaData.system \
     liboverlay \
     libtinyxml \
