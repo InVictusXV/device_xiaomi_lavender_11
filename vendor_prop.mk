@@ -163,6 +163,13 @@ PRODUCT_PROPERTY_OVERRIDES += \
     vendor.gralloc.enable_fb_ubwc=1
 
 # DRM
+
+# Graphics
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.hardware.egl=adreno \
+    ro.hardware.vulkan=adreno
+
+# GMS
 PRODUCT_PROPERTY_OVERRIDES += \
     drm.service.enabled=true
 
