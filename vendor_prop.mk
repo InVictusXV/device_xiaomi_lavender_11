@@ -86,6 +86,14 @@ PRODUCT_PROPERTY_OVERRIDES += \
     vendor.audio.feature.audiozoom.enable=false \
     vendor.audio.feature.snd_mon.enable=true
 
+ifneq ($(filter lavender,$(TARGET_DEVICE)),)
+PRODUCT_PROPERTY_OVERRIDES += \
+    vendor.audio.adm.buffering.ms=12
+else
+PRODUCT_PROPERTY_OVERRIDES += \
+    vendor.audio.adm.buffering.ms=6
+endif
+
 # Bluetooth & FM
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.vendor.service.bdroid.sibs=false \
