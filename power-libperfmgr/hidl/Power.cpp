@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "android.hardware.power@1.3-service.lavender-libperfmgr"
+#define LOG_TAG "android.hardware.power@1.3-service.xiaomi_sdm660-libperfmgr"
 
 #include "Power.h"
 
@@ -34,7 +34,7 @@
 #define RPM_CLK 19200
 
 #ifndef TAP_TO_WAKE_NODE
-#define TAP_TO_WAKE_NODE "/proc/tp_gesture"
+#define TAP_TO_WAKE_NODE "/sys/touchpanel/double_tap"
 #endif
 
 extern struct stat_pair rpm_stat_map[];

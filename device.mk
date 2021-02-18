@@ -292,10 +292,15 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     charger_res_images \
     product_charger_res_images
-    android.hardware.power@1.3-service.lavender-libperfmgr
 
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/powerhint.json:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.json
+# Powerhint
+ifeq ($(EAS_POWERHINT_VARIANT), sdm636)
+    PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/sdm636_powerhint.json:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.json
+else
+    PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/sdm660_powerhint.json:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.json
+endif
 
 # Permissions
 PRODUCT_COPY_FILES += \
@@ -348,7 +353,7 @@ PRODUCT_COPY_FILES += \
 
 # Power
 PRODUCT_PACKAGES += \
-    android.hardware.power.stats@1.0-service.mock
+    android.hardware.power@1.3-service.lavender-libperfmgr
 
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/perf/perf-profile0.conf:$(TARGET_COPY_OUT_VENDOR)/etc/perf/perf-profile0.conf \

@@ -72,32 +72,6 @@ function 8937_sched_dcvs_eas()
 
 }
 
-function configure_automotive_sku_parameters() {
-
-    echo 1036800 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-    echo 1056000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq
-    echo 1171200 > /sys/devices/system/cpu/cpu7/cpufreq/scaling_min_freq
-    echo 1785600 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-
-#read feature id from nvram
-reg_val=`cat /sys/devices/platform/soc/780130.qfprom/qfprom0/nvmem | od -An -t d4`
-feature_id=$(((reg_val >> 20) & 0xFF))
-log -t BOOT -p i "feature id '$feature_id'"
-if [ $feature_id == 0 ]; then
-       echo " SKU Configured : SA8155P"
-       echo 2131200 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
-       echo 2419200 > /sys/devices/system/cpu/cpu7/cpufreq/scaling_max_freq
-       echo 0 > /sys/class/kgsl/kgsl-3d0/max_pwrlevel
-elif [ $feature_id == 1 ]; then
-        echo "SKU Configured : SA8150P"
-        echo 1920000 > /sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq
-        echo 2227200 > /sys/devices/system/cpu/cpu7/cpufreq/scaling_max_freq
-        echo 3 > /sys/class/kgsl/kgsl-3d0/max_pwrlevel
-else
-        echo "unknown feature_id value" $feature_id
-fi
-}
-
 function configure_sku_parameters() {
 
 #read feature id from nvram
@@ -154,8 +128,6 @@ elif [ $feature_id == 5 ]; then
 	echo 2 > /sys/class/kgsl/kgsl-3d0/max_pwrlevel
 	echo {class:ddr, res:fixed, val: 1333} > /sys/kernel/debug/aop_send_message
 	setprop vendor.sku_identified 1
-elif [ $feature_id == 4 ] || [ $feature_id == 3 ]; then
-
 elif [ $feature_id == 4 || $feature_id == 3 ]; then
 	echo "SKU Configured : SA6155"
 	echo 748800 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
@@ -373,10 +345,6 @@ function configure_zram_parameters() {
 
     RamSizeGB=`echo "($MemTotal / 1048576 ) + 1" | bc`
     zRamSizeBytes=`echo "$RamSizeGB * 1024 * 1024 * 1024 / 2" | bc`
-    zRamSizeMB=`echo "$RamSizeGB * 1024 / 2" | bc`
-    # use MB avoid 32 bit overflow
-    if [ $zRamSizeMB -gt 4096 ]; then
-
     if [ $zRamSizeBytes -gt 4294967296 ]; then
         zRamSizeBytes=4294967296
     fi
@@ -395,15 +363,6 @@ function configure_zram_parameters() {
             echo 805306368 > /sys/block/zram0/disksize
         else
             echo $zRamSizeBytes > /sys/block/zram0/disksize
-        fi
-
-        # ZRAM may use more memory than it saves if SLAB_STORE_USER
-        # debug option is enabled.
-        if [ -e /sys/kernel/slab/zs_handle ]; then
-            echo 0 > /sys/kernel/slab/zs_handle/store_user
-        fi
-        if [ -e /sys/kernel/slab/zspage ]; then
-            echo 0 > /sys/kernel/slab/zspage/store_user
         fi
         mkswap /dev/block/zram0
         swapon /dev/block/zram0 -p 32758
@@ -491,7 +450,7 @@ low_ram=`getprop ro.config.low_ram`
 if [ "$ProductName" == "msmnile" ] || [ "$ProductName" == "kona" ] || [ "$ProductName" == "sdmshrike_au" ]; then
       # Enable ZRAM
       configure_zram_parameters
-      # configure_read_ahead_kb_values
+      configure_read_ahead_kb_values
       echo 0 > /proc/sys/vm/page-cluster
       echo 100 > /proc/sys/vm/swappiness
 else
@@ -593,9 +552,7 @@ else
     # wsf Range : 1..1000 So set to bare minimum value 1.
     echo 1 > /proc/sys/vm/watermark_scale_factor
 
-    configure_zram_parameters
-
-    # configure_read_ahead_kb_values
+    configure_read_ahead_kb_values
 
     enable_swap
 fi
@@ -615,15 +572,6 @@ function enable_memory_features()
         #Enable Delay Service Restart
         setprop ro.vendor.qti.am.reschedule_service true
     fi
-}
-
-function start_hbtp()
-{
-        # Start the Host based Touch processing but not in the power off mode.
-        bootmode=`getprop ro.bootmode`
-        if [ "charger" != $bootmode ]; then
-                start vendor.hbtp
-        fi
 }
 
 case "$target" in
@@ -967,26 +915,6 @@ case "$target" in
                 if [ -f /sys/devices/soc0/hw_platform ]; then
                     hw_platform=`cat /sys/devices/soc0/hw_platform`
                 fi
-                case "$soc_id" in
-                    "239")
-                    case "$hw_platform" in
-                        "Surf")
-                            case "$platform_subtype_id" in
-                                "1" | "2")
-                                    start_hbtp
-                                ;;
-                            esac
-                        ;;
-                        "MTP")
-                            case "$platform_subtype_id" in
-                                "3")
-                                    start_hbtp
-                                ;;
-                            esac
-                        ;;
-                    esac
-                    ;;
-                esac
             ;;
             "268" | "269" | "270" | "271")
                 echo 10 > /sys/class/net/rmnet0/queues/rx-0/rps_cpus
@@ -1806,28 +1734,6 @@ case "$target" in
         case "$soc_id" in
             "293" | "304" | "338" | "351")
 
-                # Start Host based Touch processing
-                case "$hw_platform" in
-                     "MTP" | "Surf" | "RCM" )
-                        #if this directory is present, it means that a
-                        #1200p panel is connected to the device.
-                        dir="/sys/bus/i2c/devices/3-0038"
-                        if [ ! -d "$dir" ]; then
-                              start_hbtp
-                        fi
-                        ;;
-                esac
-
-                if [ $soc_id -eq "338" ]; then
-                    case "$hw_platform" in
-                        "QRD" )
-                            if [ $platform_subtype_id -eq "1" ]; then
-                               start_hbtp
-                            fi
-                            ;;
-                    esac
-                fi
-
                 #init task load, restrict wakeups to preferred cluster
                 echo 15 > /proc/sys/kernel/sched_init_task_load
 
@@ -1964,13 +1870,6 @@ case "$target" in
         esac
         case "$soc_id" in
             "349" | "350")
-
-            # Start Host based Touch processing
-            case "$hw_platform" in
-                 "MTP" | "Surf" | "RCM" | "QRD" )
-                          start_hbtp
-                    ;;
-            esac
 
             for devfreq_gov in /sys/class/devfreq/qcom,mincpubw*/governor
             do
@@ -2148,20 +2047,6 @@ case "$target" in
         case "$soc_id" in
            "303" | "307" | "308" | "309" | "320" | "386" | "436")
 
-                  # Start Host based Touch processing
-                  case "$hw_platform" in
-                    "MTP" )
-			start_hbtp
-                        ;;
-                  esac
-
-                  case "$hw_platform" in
-                    "Surf" | "RCM" )
-			if [ $platform_subtype_id -ne "4" ]; then
-			    start_hbtp
-		        fi
-                        ;;
-                  esac
                 # Apply Scheduler and Governor settings for 8917 / 8920
 
                 echo 20000000 > /proc/sys/kernel/sched_ravg_window
@@ -2239,13 +2124,6 @@ case "$target" in
 
         case "$soc_id" in
              "294" | "295" | "313" )
-
-                  # Start Host based Touch processing
-                  case "$hw_platform" in
-                    "MTP" | "Surf" | "RCM" )
-                        start_hbtp
-                        ;;
-                  esac
 
                 # Apply Scheduler and Governor settings for 8937/8940
 
@@ -2341,13 +2219,6 @@ case "$target" in
 
         case "$soc_id" in
              "354" | "364" | "353" | "363" )
-
-                # Start Host based Touch processing
-                case "$hw_platform" in
-                    "MTP" | "Surf" | "RCM" | "QRD" )
-                    start_hbtp
-                ;;
-                esac
 
                 # Apply settings for sdm429/sda429/sdm439/sda439
 
@@ -2479,23 +2350,11 @@ case "$target" in
                 esac
             ;;
         esac
-
-        case "$soc_id" in
-             "386" | "436")
-
-                # Start Host based Touch processing
-                case "$hw_platform" in
-                    "QRD" )
-                    start_hbtp
-                ;;
-                esac
-	    ;;
-	esac
     ;;
 esac
 
 case "$target" in
-    "sdm660")
+    "sdm660" | "sdm636")
 
         # Set the default IRQ affinity to the primary cluster. When a
         # CPU is isolated/hotplugged, the IRQ affinity is adjusted
@@ -2612,13 +2471,6 @@ case "$target" in
             done
             echo "cpufreq" > /sys/class/devfreq/soc:qcom,mincpubw/governor
 
-            # Start Host based Touch processing
-                case "$hw_platform" in
-                        "MTP" | "Surf" | "RCM" | "QRD" )
-                        start_hbtp
-                        ;;
-                esac
-            ;;
         esac
 
         # Start cdsprpcd only for sdm660 and disable for sdm630 and sdm636
@@ -2630,13 +2482,6 @@ case "$target" in
         #Apply settings for sdm630 and Tahaa
         case "$soc_id" in
             "318" | "327" | "385" )
-
-            # Start Host based Touch processing
-            case "$hw_platform" in
-                "MTP" | "Surf" | "RCM" | "QRD" )
-                start_hbtp
-                ;;
-            esac
 
             # Setting b.L scheduler parameters
             echo 85 > /proc/sys/kernel/sched_upmigrate
@@ -2780,6 +2625,13 @@ case "$target" in
                 echo 1600 > $cpubw/bw_hwmon/idle_mbps
             done
 
+            for memlat in /sys/class/devfreq/*qcom,memlat-cpu*
+            do
+                echo "mem_latency" > $memlat/governor
+                echo 10 > $memlat/polling_interval
+                echo 400 > $memlat/mem_latency/ratio_ceil
+            done
+
             echo "cpufreq" > /sys/class/devfreq/soc:qcom,mincpubw/governor
             ;;
         esac
@@ -2809,13 +2661,6 @@ case "$target" in
 
         case "$soc_id" in
             "336" | "337" | "347" | "360" | "393" )
-
-            # Start Host based Touch processing
-            case "$hw_platform" in
-              "MTP" | "Surf" | "RCM" | "QRD" )
-                  start_hbtp
-                  ;;
-            esac
 
       # Core control parameters on silver
       echo 0 0 0 0 1 1 > /sys/devices/system/cpu/cpu0/core_ctl/not_preferred
@@ -3222,7 +3067,6 @@ case "$target" in
             #colocation v3 settings
             echo 740000 > /proc/sys/kernel/sched_little_cluster_coloc_fmin_khz
 
-            # configure governor settings
             # configure governor settings for little cluster
             echo "schedutil" > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
             echo 0 > /sys/devices/system/cpu/cpu0/cpufreq/schedutil/up_rate_limit_us
@@ -3844,18 +3688,6 @@ case "$target" in
         case "$soc_id" in
             "347" )
 
-            # Start Host based Touch processing
-            case "$hw_platform" in
-              "Surf" | "RCM" | "QRD" )
-                  start_hbtp
-                  ;;
-              "MTP" )
-                  if [ $platform_subtype_id != 5 ]; then
-                      start_hbtp
-                  fi
-                  ;;
-            esac
-
       # Core control parameters on silver
       echo 4 > /sys/devices/system/cpu/cpu0/core_ctl/min_cpus
       echo 60 > /sys/devices/system/cpu/cpu0/core_ctl/busy_up_thres
@@ -4327,8 +4159,6 @@ case "$target" in
 		echo N > /sys/module/lpm_levels/parameters/sleep_disabled
 	fi
 	echo N > /sys/module/lpm_levels/parameters/sleep_disabled
-        # Starting io prefetcher service
-        start iop
 
         # Set Memory parameters
         configure_memory_parameters
@@ -4357,25 +4187,6 @@ case "$target" in
                 platform_subtype_id=`cat /sys/devices/soc0/platform_subtype_id`
         fi
 
-        case "$soc_id" in
-                "321" | "341")
-                # Start Host based Touch processing
-                case "$hw_platform" in
-                    "QRD" )
-                            case "$platform_subtype_id" in
-                                   "32") #QVR845 do nothing
-                                     ;;
-                                   *)
-                                         start_hbtp
-                                     ;;
-                            esac
-                     ;;
-                    *)
-                          start_hbtp
-                     ;;
-                esac
-         ;;
-        esac
 	# Core control parameters
 	echo 2 > /sys/devices/system/cpu/cpu4/core_ctl/min_cpus
 	echo 60 > /sys/devices/system/cpu/cpu4/core_ctl/busy_up_thres
@@ -4670,22 +4481,6 @@ case "$target" in
         platform_subtype_id=`cat /sys/devices/soc0/platform_subtype_id`
     fi
 
-    case "$hw_platform" in
-        "MTP" | "Surf" | "RCM" )
-            # Start Host based Touch processing
-            case "$platform_subtype_id" in
-                "0" | "1" | "2" | "4")
-                    start_hbtp
-                    ;;
-            esac
-        ;;
-        "HDK" )
-            if [ -d /sys/kernel/hbtpsensor ] ; then
-                start_hbtp
-            fi
-        ;;
-    esac
-
     echo 0 > /sys/module/lpm_levels/parameters/sleep_disabled
     configure_memory_parameters
     ;;
@@ -4868,22 +4663,6 @@ case "$target" in
     if [ -f /sys/devices/soc0/platform_subtype_id ]; then
         platform_subtype_id=`cat /sys/devices/soc0/platform_subtype_id`
     fi
-
-    case "$hw_platform" in
-        "MTP" | "Surf" | "RCM" )
-            # Start Host based Touch processing
-            case "$platform_subtype_id" in
-                "0" | "1")
-                    start_hbtp
-                    ;;
-            esac
-        ;;
-        "HDK" )
-            if [ -d /sys/kernel/hbtpsensor ] ; then
-                start_hbtp
-            fi
-        ;;
-    esac
 
 	#Setting the min and max supported frequencies
 	reg_val=`cat /sys/devices/platform/soc/780130.qfprom/qfprom0/nvmem | od -An -t d4`
@@ -5155,7 +4934,6 @@ case "$target" in
 	echo 5 > /proc/sys/kernel/sched_spill_nr_run
 	echo 1 > /proc/sys/kernel/sched_restrict_cluster_spill
         echo 1 > /proc/sys/kernel/sched_prefer_sync_wakee_to_waker
-	start iop
 
         # disable thermal bcl hotplug to switch governor
         echo 0 > /sys/module/msm_thermal/core_control/enabled
@@ -5245,27 +5023,6 @@ case "$target" in
 	if [ -f /sys/devices/soc0/platform_subtype_id ]; then
 		platform_subtype_id=`cat /sys/devices/soc0/platform_subtype_id`
 	fi
-
-	case "$soc_id" in
-		"292") #msm8998 apq8098_latv
-		# Start Host based Touch processing
-		case "$hw_platform" in
-		"QRD")
-			case "$platform_subtype_id" in
-				"0")
-					start_hbtp
-					;;
-				"16")
-					if [ $platform_major_version -lt 6 ]; then
-						start_hbtp
-					fi
-					;;
-			esac
-
-			;;
-		esac
-	    ;;
-	esac
 
 	echo N > /sys/module/lpm_levels/system/pwr/cpu0/ret/idle_enabled
 	echo N > /sys/module/lpm_levels/system/pwr/cpu1/ret/idle_enabled
@@ -5428,7 +5185,7 @@ case "$target" in
         start mpdecision
         echo 512 > /sys/block/mmcblk0/bdi/read_ahead_kb
     ;;
-    "msm8909" | "msm8916" | "msm8937" | "msm8952" | "msm8953" | "msm8994" | "msm8992" | "msm8996" | "msm8998" | "sdm660" | "apq8098_latv" | "sdm845" | "sdm710" | "msmnile" | "sdmshrike" |"msmsteppe" | "sm6150" | "kona" | "lito" | "trinket" | "atoll" | "bengal" )
+    "msm8909" | "msm8916" | "msm8937" | "msm8952" | "msm8953" | "msm8994" | "msm8992" | "msm8996" | "msm8998" | "sdm660" | "sdm636" | "apq8098_latv" | "sdm845" | "sdm710" | "msmnile" | "sdmshrike" |"msmsteppe" | "sm6150" | "kona" | "lito" | "trinket" | "atoll" | "bengal" )
         setprop vendor.post_boot.parsed 1
     ;;
     "apq8084")
@@ -5461,7 +5218,6 @@ esac
 # Enable Power modes and set the CPU Freq Sampling rates
 case "$target" in
      "msm7627a")
-        start qosmgrd
     echo 1 > /sys/module/pm2/modes/cpu0/standalone_power_collapse/idle_enabled
     echo 1 > /sys/module/pm2/modes/cpu1/standalone_power_collapse/idle_enabled
     echo 1 > /sys/module/pm2/modes/cpu0/standalone_power_collapse/suspend_enabled
@@ -5499,7 +5255,6 @@ fi
 # Change adj level and min_free_kbytes setting for lowmemory killer to kick in
 case "$target" in
      "msm8660")
-        start qosmgrd
         echo 0,1,2,4,9,12 > /sys/module/lowmemorykiller/parameters/adj
         echo 5120 > /proc/sys/vm/min_free_kbytes
      ;;
@@ -5592,3 +5347,10 @@ fi
 misc_link=$(ls -l /dev/block/bootdevice/by-name/misc)
 real_path=${misc_link##*>}
 setprop persist.vendor.mmi.misc_dev_path $real_path
+
+# set sys.use_fifo_ui prop if eas exist
+	available_governors=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors)
+
+	if echo "$available_governors" | grep schedutil; then
+	  setprop sys.use_fifo_ui 1
+	fi
