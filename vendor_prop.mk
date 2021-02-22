@@ -150,18 +150,23 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Display
 PRODUCT_PROPERTY_OVERRIDES += \
+    debug.sf.latch_unsignaled=1 \
+    debug.sf.hw=1 \
+    debug.sf.disable_backpressure=1 \
+    debug.sf.early_app_phase_offset_ns=11600000 \
+    debug.sf.early_gl_phase_offset_ns=3000000 \
+    debug.sf.early_gl_app_phase_offset_ns=15000000 \
+    debug.sf.early_phase_offset_ns=11600000 \
+    debug.cpurend.vsync=false \
     debug.hwui.use_buffer_age=false \
-    dev.pm.dyn_samplingrate=1 \
-    persist.demo.hdmirotationlock=false \
     persist.hwc.enable_vds=1 \
     ro.opengles.version=196610 \
-    ro.sf.lcd_density=403 \
-    ro.vendor.display.cabl=2 \
+    ro.qualcomm.cabl=0 \
     vendor.display.disable_skip_validate=1 \
-    vendor.display.enable_default_color_mode=1 \
-    vendor.gralloc.enable_fb_ubwc=1
-
-# DRM
+    vendor.gralloc.enable_fb_ubwc=1 \
+    vendor.video.disable.ubwc=1 \
+    vendor.display.enable_default_color_mode=0 \
+    video.disable.ubwc=1
 
 # Graphics
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -272,16 +277,12 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # SurfaceFlinger
 PRODUCT_PROPERTY_OVERRIDES += \
-    debug.sf.disable_backpressure=1 \
-    debug.sf.early_phase_offset_ns=11600000 \
-    debug.sf.early_app_phase_offset_ns=11600000 \
-    debug.sf.early_gl_phase_offset_ns=3000000 \
-    debug.sf.early_gl_app_phase_offset_ns=15000000 \
-    debug.sdm.support_writeback=0 \
-    debug.sf.enable_hwc_vds=0 \
-    debug.sf.hw=1 \
-    debug.sf.latch_unsignaled=1
-    debug.cpurend.vsync=true
+    ro.surface_flinger.force_hwc_copy_for_virtual_displays=true \
+    ro.surface_flinger.max_frame_buffer_acquired_buffers=3 \
+    ro.surface_flinger.max_virtual_display_dimension=4096 \
+    ro.surface_flinger.protected_contents=true \
+    ro.surface_flinger.max_virtual_display_dimension=4096 \
+    ro.surface_flinger.wcg_composition_dataspace=143261696
     
 # The default sf phase offset is set to 6ms, to avoid it be included into next
 # vsync threshold, set high fps early sf and next vsync threshold phase offset
@@ -290,12 +291,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
     debug.sf.high_fps_early_phase_offset_ns=6100000 \
     debug.sf.high_fps_early_gl_phase_offset_ns=9000000 \
     debug.sf.phase_offset_threshold_for_next_vsync_ns=6100000
-
-PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-    ro.surface_flinger.max_frame_buffer_acquired_buffers=3 \
-    ro.surface_flinger.force_hwc_copy_for_virtual_displays=true \
-    ro.surface_flinger.max_virtual_display_dimension=4096
-
+    
 # Thermal configs path
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     sys.thermal.data.path=/data/vendor/thermal/
