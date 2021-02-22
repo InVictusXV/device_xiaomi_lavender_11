@@ -133,9 +133,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
 PRODUCT_PROPERTY_OVERRIDES += \
     debug.media.codec2=2
 
-# Display Graphics
-PRODUCT_PROPERTY_OVERRIDES += \
-
 # Better Ram
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.config.fha_enable=true \

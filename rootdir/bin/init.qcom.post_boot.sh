@@ -552,6 +552,8 @@ else
     # wsf Range : 1..1000 So set to bare minimum value 1.
     echo 1 > /proc/sys/vm/watermark_scale_factor
 
+    configure_zram_parameters
+
     configure_read_ahead_kb_values
 
     enable_swap
@@ -1733,7 +1735,6 @@ case "$target" in
 
         case "$soc_id" in
             "293" | "304" | "338" | "351")
-
                 #init task load, restrict wakeups to preferred cluster
                 echo 15 > /proc/sys/kernel/sched_init_task_load
 
@@ -1870,7 +1871,6 @@ case "$target" in
         esac
         case "$soc_id" in
             "349" | "350")
-
             for devfreq_gov in /sys/class/devfreq/qcom,mincpubw*/governor
             do
                 echo "cpufreq" > $devfreq_gov
@@ -2046,7 +2046,6 @@ case "$target" in
         # Socid 386 = Pukeena
         case "$soc_id" in
            "303" | "307" | "308" | "309" | "320" | "386" | "436")
-
                 # Apply Scheduler and Governor settings for 8917 / 8920
 
                 echo 20000000 > /proc/sys/kernel/sched_ravg_window
@@ -2124,7 +2123,6 @@ case "$target" in
 
         case "$soc_id" in
              "294" | "295" | "313" )
-
                 # Apply Scheduler and Governor settings for 8937/8940
 
                 # HMP scheduler settings
@@ -2219,7 +2217,6 @@ case "$target" in
 
         case "$soc_id" in
              "354" | "364" | "353" | "363" )
-
                 # Apply settings for sdm429/sda429/sdm439/sda439
 
                 for cpubw in /sys/class/devfreq/*qcom,mincpubw*
@@ -2354,7 +2351,7 @@ case "$target" in
 esac
 
 case "$target" in
-    "sdm660" | "sdm636")
+    "sdm660")
 
         # Set the default IRQ affinity to the primary cluster. When a
         # CPU is isolated/hotplugged, the IRQ affinity is adjusted
@@ -2470,7 +2467,6 @@ case "$target" in
                 echo 400 > $memlat/mem_latency/ratio_ceil
             done
             echo "cpufreq" > /sys/class/devfreq/soc:qcom,mincpubw/governor
-
         esac
 
         # Start cdsprpcd only for sdm660 and disable for sdm630 and sdm636
@@ -2482,7 +2478,6 @@ case "$target" in
         #Apply settings for sdm630 and Tahaa
         case "$soc_id" in
             "318" | "327" | "385" )
-
             # Setting b.L scheduler parameters
             echo 85 > /proc/sys/kernel/sched_upmigrate
             echo 85 > /proc/sys/kernel/sched_downmigrate
@@ -2661,7 +2656,6 @@ case "$target" in
 
         case "$soc_id" in
             "336" | "337" | "347" | "360" | "393" )
-
       # Core control parameters on silver
       echo 0 0 0 0 1 1 > /sys/devices/system/cpu/cpu0/core_ctl/not_preferred
       echo 4 > /sys/devices/system/cpu/cpu0/core_ctl/min_cpus
@@ -3687,7 +3681,6 @@ case "$target" in
 
         case "$soc_id" in
             "347" )
-
       # Core control parameters on silver
       echo 4 > /sys/devices/system/cpu/cpu0/core_ctl/min_cpus
       echo 60 > /sys/devices/system/cpu/cpu0/core_ctl/busy_up_thres
@@ -4159,6 +4152,8 @@ case "$target" in
 		echo N > /sys/module/lpm_levels/parameters/sleep_disabled
 	fi
 	echo N > /sys/module/lpm_levels/parameters/sleep_disabled
+        # Starting io prefetcher service
+        start iop
 
         # Set Memory parameters
         configure_memory_parameters
@@ -4934,6 +4929,7 @@ case "$target" in
 	echo 5 > /proc/sys/kernel/sched_spill_nr_run
 	echo 1 > /proc/sys/kernel/sched_restrict_cluster_spill
         echo 1 > /proc/sys/kernel/sched_prefer_sync_wakee_to_waker
+	start iop
 
         # disable thermal bcl hotplug to switch governor
         echo 0 > /sys/module/msm_thermal/core_control/enabled
@@ -5185,7 +5181,7 @@ case "$target" in
         start mpdecision
         echo 512 > /sys/block/mmcblk0/bdi/read_ahead_kb
     ;;
-    "msm8909" | "msm8916" | "msm8937" | "msm8952" | "msm8953" | "msm8994" | "msm8992" | "msm8996" | "msm8998" | "sdm660" | "sdm636" | "apq8098_latv" | "sdm845" | "sdm710" | "msmnile" | "sdmshrike" |"msmsteppe" | "sm6150" | "kona" | "lito" | "trinket" | "atoll" | "bengal" )
+    "msm8909" | "msm8916" | "msm8937" | "msm8952" | "msm8953" | "msm8994" | "msm8992" | "msm8996" | "msm8998" | "sdm660" | "apq8098_latv" | "sdm845" | "sdm710" | "msmnile" | "sdmshrike" |"msmsteppe" | "sm6150" | "kona" | "lito" | "trinket" | "atoll" | "bengal" )
         setprop vendor.post_boot.parsed 1
     ;;
     "apq8084")
@@ -5218,6 +5214,7 @@ esac
 # Enable Power modes and set the CPU Freq Sampling rates
 case "$target" in
      "msm7627a")
+        start qosmgrd
     echo 1 > /sys/module/pm2/modes/cpu0/standalone_power_collapse/idle_enabled
     echo 1 > /sys/module/pm2/modes/cpu1/standalone_power_collapse/idle_enabled
     echo 1 > /sys/module/pm2/modes/cpu0/standalone_power_collapse/suspend_enabled
@@ -5255,6 +5252,7 @@ fi
 # Change adj level and min_free_kbytes setting for lowmemory killer to kick in
 case "$target" in
      "msm8660")
+        start qosmgrd
         echo 0,1,2,4,9,12 > /sys/module/lowmemorykiller/parameters/adj
         echo 5120 > /proc/sys/vm/min_free_kbytes
      ;;
@@ -5348,9 +5346,3 @@ misc_link=$(ls -l /dev/block/bootdevice/by-name/misc)
 real_path=${misc_link##*>}
 setprop persist.vendor.mmi.misc_dev_path $real_path
 
-# set sys.use_fifo_ui prop if eas exist
-	available_governors=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors)
-
-	if echo "$available_governors" | grep schedutil; then
-	  setprop sys.use_fifo_ui 1
-	fi

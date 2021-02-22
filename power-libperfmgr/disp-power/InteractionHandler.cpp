@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "android.hardware.power@1.3-service.xiaomi_sdm660-libperfmgr"
+#define LOG_TAG "android.hardware.power@1.3-service.lavender-libperfmgr"
 
 #include <fcntl.h>
 #include <poll.h>
@@ -123,10 +123,8 @@ size_t InteractionHandler::CalcTimespecDiffMs(struct timespec start, struct time
 void InteractionHandler::Acquire(int32_t duration) {
 
     std::lock_guard<std::mutex> lk(mLock);
-    if (mState == INTERACTION_STATE_UNINITIALIZED) {
-        ALOGW("%s: called while uninitialized", __func__);
+    if (mState == INTERACTION_STATE_UNINITIALIZED)
         return;
-    }
 
     int inputDuration = duration + 650;
     int finalDuration;
