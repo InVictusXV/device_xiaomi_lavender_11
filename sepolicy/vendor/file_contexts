@@ -85,6 +85,21 @@
 # Root files
 /persist(/.*)?                                  u:object_r:mnt_vendor_file:s0
 
+# Service HALs
+/(vendor|system/vendor)/bin/hw/android\.hardware\.authsecret@1\.0-service                                                   u:object_r:hal_authsecret_default_exec:s0
+
+# Sockets
+/dev/socket/audio_hw_socket                                                                                                 u:object_r:audio_socket:s0
+
+# Tap to Wake
+/sys/devices/soc/c177000.i2c/i2c-3/3-005d/enable_dt2w                                                                       u:object_r:sysfs_tap_to_wake:s0
+/sys/devices/soc/c177000.i2c/i2c-3/3-0038/enable_dt2w                                                                       u:object_r:sysfs_tap_to_wake:s0
+/proc/touchscreen/enable_dt2w                                                                                               u:object_r:sysfs_tap_to_wake:s0
+/sys/devices/soc/c175000\.i2c/i2c-1/1-[0-9a-f]+/input/input[0-9]+/wake_gesture                                              u:object_r:sysfs_tap_to_wake:s0
+/proc/tp_gesture                                                                                                            u:object_r:sysfs_tap_to_wake:s0
+/sys/touchpanel/double_tap                                                                                                  u:object_r:sysfs_tap_to_wake:s0
+/proc/touchpanel/wake_gesture                                                                                               u:object_r:sysfs_tap_to_wake:s0
+
 # Thermal
 /data/vendor/thermal(/.*)?                      u:object_r:thermal_data_file:s0
 
