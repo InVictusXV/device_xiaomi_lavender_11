@@ -150,15 +150,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Display
 PRODUCT_PROPERTY_OVERRIDES += \
-    debug.sf.latch_unsignaled=1 \
-    debug.sf.enable_hwc_vds=1 \
-    debug.sf.hw=1 \
-    debug.sf.disable_backpressure=1 \
-    debug.sf.early_app_phase_offset_ns=1500000 \
-    debug.sf.early_gl_phase_offset_ns=3000000 \
-    debug.sf.early_gl_app_phase_offset_ns=15000000 \
-    debug.sf.early_phase_offset_ns=1500000 \
-    debug.cpurend.vsync=true \
     debug.sf.hw=1 \
     debug.sf.disable_backpressure=1 \
     debug.sf.early_app_phase_offset_ns=11600000 \
@@ -289,7 +280,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.surface_flinger.max_frame_buffer_acquired_buffers=3 \
     ro.surface_flinger.max_virtual_display_dimension=4096 \
     ro.surface_flinger.protected_contents=true \
-    ro.surface_flinger.max_virtual_display_dimension=4096 \
     ro.surface_flinger.wcg_composition_dataspace=143261696
     
 # The default sf phase offset is set to 6ms, to avoid it be included into next
