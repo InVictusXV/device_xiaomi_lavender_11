@@ -92,7 +92,6 @@ TARGET_USES_QTI_CAMERA_DEVICE := true
 BOARD_USES_QCNE := true
 
 # Display
-OVERRIDE_RS_DRIVER := libRSDriver_adreno.so
 TARGET_USES_GRALLOC1 := true
 TARGET_USES_HWC2 := true
 TARGET_USES_ION := true
